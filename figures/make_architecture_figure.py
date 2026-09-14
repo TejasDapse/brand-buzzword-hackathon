@@ -9,18 +9,20 @@ Every number drawn here is traceable to `hangman_kaggle_notebook.ipynb`
 (cell 5 defines `hangman.py`; cell 8 defines the run `Config`) or to a direct
 measurement of `train.txt` / `test.txt`.
 
-Usage:
-    python make_architecture_figure.py
+Usage (from anywhere -- output paths are resolved from this file's location):
+    python figures/make_architecture_figure.py
 
 Writes:
-    hangman_architecture.png   (220 dpi)
-    hangman_architecture.svg
-    hangman_architecture.pdf
+    <repo root>/hangman_architecture.png   (220 dpi, the one the README embeds)
+    figures/hangman_architecture.svg
+    figures/hangman_architecture.pdf
 
 Dependencies: matplotlib + numpy only. Deterministic, no network, no assets.
 """
 
 from __future__ import annotations
+
+import os
 
 import matplotlib
 matplotlib.use("Agg")
@@ -961,7 +963,17 @@ if FIT_WARNINGS:
 else:
     print("text-fit check: all boxes fit their contents")
 
-for ext, kw in (("png", {"dpi": 220}), ("svg", {}), ("pdf", {})):
-    fig.savefig(f"hangman_architecture.{ext}", facecolor="#FFFFFF", **kw)
-    print(f"wrote hangman_architecture.{ext}")
+# The PNG lives at the repo root because the README embeds it; the vector
+# exports stay next to this script. Paths are resolved from __file__ so the
+# script behaves the same whichever directory it is invoked from.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ROOT = os.path.dirname(_HERE)
+_OUTPUTS = (
+    ("png", os.path.join(_ROOT, "hangman_architecture.png"), {"dpi": 220}),
+    ("svg", os.path.join(_HERE, "hangman_architecture.svg"), {}),
+    ("pdf", os.path.join(_HERE, "hangman_architecture.pdf"), {}),
+)
+for _ext, _path, _kw in _OUTPUTS:
+    fig.savefig(_path, facecolor="#FFFFFF", **_kw)
+    print(f"wrote {os.path.relpath(_path, _ROOT)}")
 plt.close(fig)

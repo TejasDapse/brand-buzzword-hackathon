@@ -23,23 +23,19 @@ model has to learn orthography, not memorise words.
 
 ## Architecture
 
-Two figures. The first covers the whole pipeline end to end; the second zooms into the
-network itself, at the level of individual layers, tensor shapes and masks.
+The whole pipeline in one figure — data, model, training, decision rule and inference.
 
-Regenerate both (PNG at 220 dpi, plus SVG and PDF):
+![Architecture of the Neural Hangman Solver](hangman_architecture.png)
+
+Regenerate it (PNG at 220 dpi to the repo root, plus SVG and PDF into `figures/`):
 
 ```bash
-python make_architecture_figure.py   # the pipeline
-python make_model_figure.py          # the model, in detail
+python figures/make_architecture_figure.py
 ```
 
-Both need only `matplotlib` and `numpy`, are deterministic, and read no external files.
+It needs only `matplotlib` and `numpy`, is deterministic, and reads no external files.
 
-### Figure 1 — the pipeline
-
-![Pipeline of the Neural Hangman Solver](hangman_architecture.png)
-
-#### The nine panels
+### The nine panels
 
 | # | Panel | What it covers |
 |---|-------|----------------|
@@ -52,23 +48,6 @@ Both need only `matplotlib` and `numpy`, are deterministic, and read no external
 | 7 | **Two-phase training** | Random-state pretraining, then the self-play loop that harvests board states and back-fills win/loss labels for the value head. |
 | 8 | **Decision rule** | How the three head outputs combine into one score per candidate letter, and how the letter is chosen. |
 | 9 | **Inference & submission** | Length-bucketed batched game simulation, optional ensembling, and the submission schema checks. |
-
-### Figure 2 — the model in detail
-
-![Detailed architecture of HangmanNet](hangman_model_architecture.png)
-
-#### The eight panels
-
-| # | Panel | What it covers |
-|---|-------|----------------|
-| 1 | **Forward spine** | The whole forward pass top to bottom, with the tensor shape after every stage, plus a full parameter ledger. |
-| 2 | **Input tensors & masking** | `chars`, `guessed`, `lengths` — dtype and meaning — and the three masks all derived from `chars`. |
-| 3 | **Input composition** | The four additive embedding streams, the broadcast shape of each, and the `LayerNorm` × `valid` that follows. |
-| 4 | **Multi-scale conv front-end** | Both transposes, the three parallel `Conv1d` branches, the channel concat, the projection, and the residual add. |
-| 5 | **BiLSTM stack** | Both bidirectional layers, where the inter-layer dropout sits, and the residual + norm. |
-| 6 | **Transformer encoder layer** | One pre-norm layer expanded into its two sub-blocks, and the missing final norm. |
-| 7 | **Multi-head self-attention** | `in_proj` → 8 heads of 40 dims → scaled scores → mask → softmax → merge → `out_proj`. |
-| 8 | **Masked pooling & the three heads** | The two pooling reductions and the exact MLP shape of each head. |
 
 ---
 
@@ -195,13 +174,23 @@ off by default: `TRAIN_SECOND_SEED = False` in cell 15.
 
 ## Files
 
+```
+.
+├── README.md
+├── hangman_kaggle_notebook.ipynb     the solution — trains, evaluates, submits
+├── hangman_architecture.png          the figure embedded above
+└── figures/
+    ├── make_architecture_figure.py   regenerates the figure
+    ├── hangman_architecture.svg      vector export
+    └── hangman_architecture.pdf      vector export
+```
+
 | Path | What it is |
 |---|---|
 | `hangman_kaggle_notebook.ipynb` | The whole pipeline. Cell 5 writes `hangman.py`; the rest configures, trains, evaluates and submits. |
-| `make_architecture_figure.py` | Regenerates figure 1 (the pipeline). `matplotlib` + `numpy` only. |
-| `make_model_figure.py` | Regenerates figure 2 (the model in detail). Carries its own copy of the drawing helpers so each script stays runnable on its own; keep the two copies in step if you edit them. |
-| `hangman_architecture.png` / `.svg` / `.pdf` | Figure 1. |
-| `hangman_model_architecture.png` / `.svg` / `.pdf` | Figure 2. |
+| `hangman_architecture.png` | The architecture figure. It stays at the root because the README embeds it from there. |
+| `figures/make_architecture_figure.py` | Regenerates the figure. `matplotlib` + `numpy` only. Output paths are resolved from the script's own location, so it behaves identically whichever directory you run it from. |
+| `figures/hangman_architecture.svg` / `.pdf` | Vector exports, for print or slides. |
 | `train.txt` | 225,300 words. The only supervision. **Not committed** — see below. |
 | `test.txt` | 250,000 words. Read once, to produce the submission. **Not committed.** |
 
